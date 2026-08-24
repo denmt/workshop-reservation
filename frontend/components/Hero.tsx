@@ -3,7 +3,7 @@ import React from "react";
 
 type Props = { onOpenSearch?: () => void };
 
-export default function Hero({ onOpenSearch }: Props) {
+export default function Hero() {
   return (
     <section className="relative h-screen overflow-hidden bg-white">
       <img
@@ -39,16 +39,6 @@ export default function Hero({ onOpenSearch }: Props) {
           Join hands-on workshops in different crafts. <br></br> Reserve your
           workbench and bring your ideas to life.
         </p>
-
-        <div className="mt-6">
-          <button
-            type="button"
-            onClick={() => onOpenSearch && onOpenSearch()}
-            className="hero-subheading rounded-full border border-black bg-white px-8 py-3 text-base text-black underline underline-offset-4 transition-colors hover:bg-zinc-50"
-          >
-            Search for a Workshop
-          </button>
-        </div>
       </div>
 
       <div
