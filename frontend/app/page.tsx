@@ -43,7 +43,7 @@ export default function Home() {
   return (
     <div className="min-h-screen overflow-x-hidden bg-white font-sans text-zinc-900">
       <NavBar />
-      <Hero onOpenSearch={() => setSearchOpen(true)} />
+      <Hero />
       <section className="relative z-20 bg-white pb-6 pt-4">
         <div className="mx-auto max-w-4xl px-6">
           <UpcomingCarousel workshops={workshops} />
