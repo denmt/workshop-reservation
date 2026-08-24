@@ -171,11 +171,6 @@ export default function WorkshopList({ workshops }: Props) {
                       >
                         {w.category || "General"}
                       </span>
-                      {full && (
-                        <span className="rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
-                          Full
-                        </span>
-                      )}
                     </div>
                     <h3
                       className="mt-1.5 text-base font-bold leading-snug"
