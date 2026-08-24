@@ -8,7 +8,8 @@
  * Make sure to set the DATABASE_URL environment variable before running this script.
  */
 
-require("dotenv").config();
+const path = require("path");
+require("dotenv").config({ path: path.join(__dirname, ".env") });
 const { Pool } = require("pg");
 
 // Mask and log the DATABASE_URL (hide password) to help debugging

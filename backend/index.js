@@ -1,4 +1,5 @@
-require("dotenv").config();
+const path = require("path");
+require("dotenv").config({ path: path.join(__dirname, ".env") });
 const express = require("express");
 const cors = require("cors");
 const { Pool } = require("pg");
@@ -38,8 +39,26 @@ app.get("/api/workshops", async (req, res) => {
     );
     res.json(rows);
   } catch (err) {
-    console.error("Error fetching workshops", err);
-    res.status(500).json({ error: "Internal server error" });
+    console.error(
+      "Error fetching workshops",
+      err && err.stack ? err.stack : err,
+    );
+    // If this is a DB connectivity issue, return 503 with a brief diagnostic message for debugging
+    const msg = err && err.message ? err.message : "Internal server error";
+    res.status(503).json({ error: "Database unavailable", detail: msg });
+  }
+});
+
+// Health check: reports DB connectivity
+app.get("/health", async (req, res) => {
+  try {
+    await pool.query("SELECT 1");
+    res.json({ ok: true, db: "reachable" });
+  } catch (err) {
+    console.error("Health check DB error", err && err.stack ? err.stack : err);
+    res
+      .status(503)
+      .json({ ok: false, db: "unreachable", detail: err && err.message });
   }
 });
 
