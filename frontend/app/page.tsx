@@ -6,7 +6,7 @@ import WorkshopList from "../components/WorkshopList";
 import UpcomingCarousel from "../components/UpcomingCarousel";
 
 export default function Home() {
-  const [workshops, setWorkshops] = useState([]);
+  const [workshops, setWorkshops] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
