@@ -10,8 +10,6 @@ This project is a system designed to manage workshop reservations for a communit
 **Backend:** Express.js (Node.js)
 **Database:** Supabase (PostgreSQL)
 
-ed UI components instantly without vendor lock-in, meaning I had full control over every pixel and behavior.
-
 ---
 
 ## Setup & Run Instructions
