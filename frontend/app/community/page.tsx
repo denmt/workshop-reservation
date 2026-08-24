@@ -4,7 +4,7 @@ import NavBar from "../../components/NavBar";
 import WorkshopList from "../../components/WorkshopList";
 
 export default function CommunityPage() {
-  const [workshops, setWorkshops] = useState([]);
+  const [workshops, setWorkshops] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
