@@ -1,7 +1,6 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import NavBar from "@/components/NavBar";
 import {
   Dialog,
   DialogContent,
@@ -111,7 +110,6 @@ export default function WorkshopDetailPage() {
 
   return (
     <div className="min-h-screen bg-zinc-50 font-sans text-zinc-900">
-      <NavBar />
       {fetching && (
         <div className="flex items-center justify-center py-24 text-zinc-400">
           Loading...
