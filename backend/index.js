@@ -3,6 +3,7 @@ require("dotenv").config({ path: path.join(__dirname, ".env") });
 const express = require("express");
 const cors = require("cors");
 const { Pool } = require("pg");
+const { error } = require("console");
 
 // Masked DATABASE_URL for logs
 const maskedDatabaseUrl = process.env.DATABASE_URL
@@ -30,6 +31,7 @@ app.use(express.json());
  * Returns a list of all workshops, ordered by date (earliest first).
  */
 
+// API endpoint to fetch all workshops, ordered by date. (used for the workshop list page)
 app.get("/api/workshops", async (req, res) => {
   try {
     const { rows } = await pool.query(
@@ -49,7 +51,7 @@ app.get("/api/workshops", async (req, res) => {
   }
 });
 
-// Health check: reports DB connectivity
+// Health check endpoint to verify that the server and database are reachable.
 app.get("/health", async (req, res) => {
   try {
     await pool.query("SELECT 1");
@@ -67,8 +69,9 @@ app.get("/health", async (req, res) => {
  * Returns a single workshop by its ID.
  * Usage: For searching a specific workshop, provide the ID in the URL path.
  */
+
 app.get("/api/workshops/:id", async (req, res) => {
-  const id = parseInt(req.params.id, 10);
+  const id = parseInt(req.params.id, 10); // Parse the ID as an integer
   if (!id) return res.status(400).json({ error: "Invalid id" });
   try {
     const { rows } = await pool.query(
@@ -88,6 +91,7 @@ app.get("/api/workshops/:id", async (req, res) => {
  * POST /api/reservations
  * Body: { workshop_id, name, email }
  * Creates a reservation if seats are available and the same email hasn't reserved this workshop.
+ * Uses Pessimistic locking to prevent race conditions.
  */
 app.post("/api/reservations", async (req, res) => {
   const { workshop_id, name, email } = req.body || {};
@@ -96,15 +100,30 @@ app.post("/api/reservations", async (req, res) => {
       .status(400)
       .json({ error: "workshop_id, name, and email are required" });
 
-  const client = await pool.connect();
+  const client = await pool.connect(); // Get a client from the pool for transaction.
+
   try {
-    await client.query("BEGIN");
+    await client.query("BEGIN"); // Start a transaction.
+
+    // R1: Limit emails to have only 2 workshop reservations.
+
+    const emailCount = await client.query(
+      "SELECT COUNT(*) FROM reservations WHERE email = $1",
+      [email],
+    );
+
+    if (parseInt(emailCount.rows[0].count, 10) >= 2) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({ error: "You have 2 active reservations." });
+    }
 
     // Lock the workshop row to prevent race conditions.
     const wk = await client.query(
       "SELECT id, seats_remaining FROM workshops WHERE id = $1 FOR UPDATE",
       [workshop_id],
     );
+
+    // If the workshop doesn't exist, rollback and return 404.
     if (wk.rows.length === 0) {
       await client.query("ROLLBACK");
       return res.status(404).json({ error: "Workshop not found" });
@@ -115,12 +134,14 @@ app.post("/api/reservations", async (req, res) => {
       return res.status(409).json({ error: "No seats available" });
     }
 
-    // attempt to insert reservation (unique constraint on workshop_id+email)
+    // attempt to insert reservation.
     try {
       const insert = await client.query(
         "INSERT INTO reservations (workshop_id, name, email) VALUES ($1, $2, $3) RETURNING id, workshop_id, name, email, created_at",
         [workshop_id, name, email],
       );
+
+      // A single email may hold only 2 reservations.
 
       // decrement seats
       await client.query(
@@ -135,6 +156,7 @@ app.post("/api/reservations", async (req, res) => {
 
       // Catch duplicate reservation errors.
       if (insertErr && insertErr.code === "23505") {
+        // Unique violation error code in PostgreSQL
         return res
           .status(409)
           .json({ error: "Reservation already exists for this email" });
